@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import data from "../data/data.json"
 import icon from "../data/icons.png"
 import styled from "styled-components"
@@ -22,10 +22,46 @@ const Icon: React.FC<{id:string}> = ({id}) => {
     return <StyledIcon  position={position} title={target.id}/>
 }
 
+const StyledProductSelectWrapper = styled.span`
+position:relative;
+`
+const StyledProductSelect = styled.div`
+position: absolute;
+width: 500px;
+top: 0px;
+left: 0px;
+border: 1px solid black;
+box-shadow: 1px;
+background-color: white;
+`
+
+const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({onChange}) => {
+    const [product, setProduct] = useState("iron-ore")
+    const [showSelect, setShowSelect] = useState(false)
+    const [rate, setRate] = useState("60")
+    return <div>
+            Produce<StyledProductSelectWrapper>
+                <span onClick={() => setShowSelect(true)}><Icon id={product}/></span>
+                {showSelect  &&
+                    <StyledProductSelect>
+                        select product <span onClick={() => setShowSelect(false)}>x close</span><br/>
+                        {data.items.map(item => <span onClick={() => {
+                            setProduct(item.id)
+                            setShowSelect(false)
+                            onChange([{id:product, rate: Number(rate)}])
+                        }}><Icon id={item.id}/></span>)}
+                    </StyledProductSelect>
+                }
+                </StyledProductSelectWrapper>
+            <input type="number" value={rate} onChange={(e) => setRate(e.target.value)}/> / min
+        </div>
+}
+
+type TargetProducts = {id: string; rate: number}[]
+
 const App: React.FC = () => {
     return <>
-        Hello
-        {data.icons.map(icon => <Icon id={icon.id} key={icon.id}/>)}
+        <ProductInput onChange={() => {}}/>
     </>
 }
 
