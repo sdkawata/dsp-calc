@@ -56,57 +56,53 @@ const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({o
                     </StyledProductSelect>
                 }
                 </StyledProductSelectWrapper>
-            <input type="number" value={rate} onChange={(e) => setRate(e.target.value)}/> / sec
+            <input type="number" value={rate} onChange={(e) => setRate(e.target.value)} onBlur={() => onChange([{id:product, rate: Number(rate)}])}/> / sec
         </div>
 }
 
-const StyledTopLevelTreesDisplay = styled.ul``
-const StyledTreesDisplay = styled.ul``
-const StyledTreeDisplay = styled.ul``
-const StyledFactoryView = styled.div`
-display: flex;
+
+const StyledTR = styled.tr`
 `
-const StyledFactoryProductView = styled.div`
+const StyledTD = styled.td<{indent?: number}>`
+padding-left: ${props => (props.indent ?? 0) * 50}px;
+border-top: #ccc solid 1px;
+border-left: none;
+border-right: none;
 `
-const StyledFactoryMachineView = styled.div`
-margin-left: 30px;
-`
-const ProductTreeDisplay: React.FC<{tree: ProductionTree}> = ({tree}) => {
+const ProductTreeDisplay: React.FC<{tree: ProductionTree, indent: number}> = ({tree, indent}) => {
     if (tree.type === "external") {
-        return <StyledTreeDisplay><Icon id={tree.id}/> {tree.rate} / sec</StyledTreeDisplay>
+        return <StyledTR><StyledTD indent={indent}><Icon id={tree.id}/>{tree.rate} / sec </StyledTD></StyledTR>
     } else if (tree.type === "factory") {
-        return <StyledTreeDisplay>
-        {
-            <StyledFactoryView>
-                <StyledFactoryProductView>{
+        return <>
+            <StyledTR>
+                <StyledTD indent={indent}>
+                {
                 tree.factory.products.map((product) => <div>
                     <Icon id={product.id}/> {product.rate} / sec
                 </div>)}
-                </StyledFactoryProductView>
-                <StyledFactoryMachineView><Icon id={tree.factory.machine}/>x {tree.factory.machineCount}</StyledFactoryMachineView>
-            </StyledFactoryView>
-        }
-        <StyledTreesDisplay>
+                </StyledTD>
+                <StyledTD><Icon id={tree.factory.machine}/>x {tree.factory.machineCount}</StyledTD>
+            </StyledTR>
             {
-                tree.children.map(tree => <ProductTreeDisplay tree={tree}/>)
+                tree.children.map(tree => <ProductTreeDisplay tree={tree} indent={indent+1}/>)
             }
-        </StyledTreesDisplay>
-    </StyledTreeDisplay>
+    </>
     } else {
         return <></>
     }
 }
 
 const ProductTreesDisplay: React.FC<{trees: ProductionTree[]}> = ({trees}) => {
-    return <StyledTopLevelTreesDisplay>{
-        trees.map(tree => <ProductTreeDisplay tree={tree}/>)
-    }</StyledTopLevelTreesDisplay>
+    return <table><tbody>{
+        trees.map(tree => <ProductTreeDisplay tree={tree} indent={0}/>)
+    }</tbody></table>
 }
 
 const App: React.FC = () => {
-    const [target, setTarget] = useState([{id: "iron-ore", rate: 1}])
+    const [target, setTarget] = useState([{id: "t-matrix", rate: 1}])
     const factories = useMemo(() => simpleSolver(target, data.recipes), [target])
     const trees = useMemo(() => buildTrees(factories, target), [factories, target])
+    console.log(trees)
     return <>
         <ProductInput onChange={(target) => {setTarget(target)}}/>
         <ProductTreesDisplay trees={trees}/>
