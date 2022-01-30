@@ -97,6 +97,7 @@ const Indent: React.FC<{indents: boolean[]}> = ({indents}) => {
         })}
     </>
 }
+const formatNumber = (n:number):string => n.toFixed(1).replace(/\.0$/, "")
 const ProductTreeDisplay: React.FC<{tree: ProductionTree, indents: boolean[]}> = ({tree, indents}) => {
     if (tree.type === "external") {
         return <StyledTR><StyledTD><StyledConnectWrapper><Indent indents={indents}/><div><Icon id={tree.id}/>{tree.rate} / sec </div></StyledConnectWrapper></StyledTD><StyledTD></StyledTD></StyledTR>
@@ -109,12 +110,12 @@ const ProductTreeDisplay: React.FC<{tree: ProductionTree, indents: boolean[]}> =
                     <div>
                     {
                     tree.factory.products.map((product) => <div>
-                        <Icon id={product.id}/> {product.rate} / sec
+                        <Icon id={product.id}/> {formatNumber(product.rate)} / sec
                     </div>)}
                     </div>
                     </StyledConnectWrapper>
                 </StyledTD>
-                <StyledTD><Icon id={tree.factory.machine}/>x {tree.factory.machineCount}</StyledTD>
+                <StyledTD><Icon id={tree.factory.machine}/>x {formatNumber(tree.factory.machineCount)}</StyledTD>
             </StyledTR>
             {
                 tree.children.map((child, idx) => {
