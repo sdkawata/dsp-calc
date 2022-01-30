@@ -61,18 +61,19 @@ const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({o
         </div>
 }
 
+const StyledTable = styled.table`
+border-spacing: 0;
+`
 
 const StyledTR = styled.tr`
 `
 const StyledTD = styled.td<{indent?: number}>`
 padding-left: ${props => (props.indent ?? 0) * 50}px;
-border-top: #ccc solid 1px;
-border-left: none;
-border-right: none;
+border: #ccc solid 1px;
 `
 const ProductTreeDisplay: React.FC<{tree: ProductionTree, indent: number}> = ({tree, indent}) => {
     if (tree.type === "external") {
-        return <StyledTR><StyledTD indent={indent}><Icon id={tree.id}/>{tree.rate} / sec </StyledTD></StyledTR>
+        return <StyledTR><StyledTD indent={indent}><Icon id={tree.id}/>{tree.rate} / sec </StyledTD><StyledTD></StyledTD></StyledTR>
     } else if (tree.type === "factory") {
         return <>
             <StyledTR>
@@ -94,16 +95,15 @@ const ProductTreeDisplay: React.FC<{tree: ProductionTree, indent: number}> = ({t
 }
 
 const ProductTreesDisplay: React.FC<{trees: ProductionTree[]}> = ({trees}) => {
-    return <table><tbody>{
+    return <StyledTable><tbody>{
         trees.map(tree => <ProductTreeDisplay tree={tree} indent={0}/>)
-    }</tbody></table>
+    }</tbody></StyledTable>
 }
 
 const App: React.FC = () => {
     const [target, setTarget] = useState([{id: "t-matrix", rate: 1}])
     const factories = useMemo(() => lpSolver(target, data.recipes), [target])
     const trees = useMemo(() => buildTrees(factories, target), [factories, target])
-    console.log(trees)
     return <>
         <ProductInput onChange={(target) => {setTarget(target)}}/>
         <ProductTreesDisplay trees={trees}/>
