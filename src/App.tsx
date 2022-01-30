@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import data from "../data/data.json"
 import icon from "../data/icons.png"
 import styled from "styled-components"
@@ -38,6 +38,15 @@ box-shadow: 1px;
 background-color: white;
 `
 
+const Modal: React.FC<{onClose: () => void}> = ({onClose, children}) => {
+    useEffect(() => {
+        const listner = (e) => {e.preventDefault(); onClose()}
+        document.addEventListener('click',listner);
+        return () => document.removeEventListener('click', listner)
+    }, [onClose])
+    return <>{children}</>
+}
+
 const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({onChange}) => {
     const [product, setProduct] = useState("iron-ore")
     const [showSelect, setShowSelect] = useState(false)
@@ -46,6 +55,7 @@ const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({o
             Produce<StyledProductSelectWrapper>
                 <span onClick={() => setShowSelect(true)}><Icon id={product}/></span>
                 {showSelect  &&
+                <Modal onClose={() => setShowSelect(false)}>
                     <StyledProductSelect>
                         <div style={{display: "flex",justifyContent: "space-between"}}>
                         <span>select product</span><span style={{cursor: "pointer"}} onClick={() => setShowSelect(false)}>x close</span>
@@ -58,6 +68,7 @@ const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({o
                         style={{cursor: "pointer"}}
                         key={item.id}><Icon id={item.id}/></span>)}
                     </StyledProductSelect>
+                    </Modal>
                 }
                 </StyledProductSelectWrapper>
             <input type="number" value={rate} onChange={(e) => setRate(e.target.value)} onBlur={() => onChange([{id:product, rate: Number(rate)}])}/> / sec
