@@ -1,7 +1,9 @@
 {
   "name": "dsp-calc",
   "scripts": {
-    "dev": "webpack serve --mode development"
+    "dev": "webpack serve --mode development",
+    "prod": "webpack build --mode production",
+    "test": "jest"
   },
   "author": "",
   "license": "MIT",

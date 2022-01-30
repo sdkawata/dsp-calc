@@ -1,0 +1,29 @@
+name: deploy
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup node v16
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - name: npm install
+        run: npm install
+      - name: test js
+        run: npm test
+      - name: build js
+        run: npm run prod
+      - name: relase to gh-pages
+        run: |
+          git config --global user.name "Github Action"
+          git config --global user.email "<>"
+          git --work-tree dist/ checkout --orphan gh-pages
+          rm dist/.gitkeep
+          git --work-tree dist/ add --all
+          git commit -m "[ci skip] release $(date)"
+          git push --force --set-upstream origin gh-pages
