@@ -1,5 +1,6 @@
 const path = require('path')
 const CopyPlugin = require('copy-webpack-plugin')
+const webpack = require('webpack')
 
 module.exports = {
   entry: {
@@ -36,6 +37,7 @@ module.exports = {
       patterns: [
         {from: "static", to: "."}
       ]
-    })
+    }),
+    new webpack.IgnorePlugin({resourceRegExp: /(fs|child_process)/})
   ]
 }

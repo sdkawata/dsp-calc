@@ -5,6 +5,7 @@ import styled from "styled-components"
 import { simpleSolver } from "./simpleSolver"
 import { TargetProducts } from "./types"
 import { buildTrees, ProductionTree } from "./treeBuilder"
+import { lpSolver } from "./lpSolver"
 
 const StyledIcon = styled.span<{position: string}>`
 display: inline-block;
@@ -100,7 +101,7 @@ const ProductTreesDisplay: React.FC<{trees: ProductionTree[]}> = ({trees}) => {
 
 const App: React.FC = () => {
     const [target, setTarget] = useState([{id: "t-matrix", rate: 1}])
-    const factories = useMemo(() => simpleSolver(target, data.recipes), [target])
+    const factories = useMemo(() => lpSolver(target, data.recipes), [target])
     const trees = useMemo(() => buildTrees(factories, target), [factories, target])
     console.log(trees)
     return <>
