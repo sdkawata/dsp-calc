@@ -115,7 +115,7 @@ const Indent: React.FC<{indents: boolean[]}> = ({indents}) => {
 const formatNumber = (n:number):string => n.toFixed(1).replace(/\.0$/, "")
 const ProductTreeDisplay: React.FC<{tree: ProductionTree, indents: boolean[]}> = ({tree, indents}) => {
     if (tree.type === "external") {
-        return <StyledTR><StyledTD><StyledConnectWrapper><Indent indents={indents}/><div><Icon id={tree.id}/>{tree.rate} / sec </div></StyledConnectWrapper></StyledTD><StyledTD></StyledTD></StyledTR>
+        return <StyledTR><StyledTD><StyledConnectWrapper><Indent indents={indents}/><div><Icon id={tree.id}/>{formatNumber(tree.rate)} / sec </div></StyledConnectWrapper></StyledTD><StyledTD></StyledTD></StyledTR>
     } else if (tree.type === "factory") {
         return <>
             <StyledTR>
