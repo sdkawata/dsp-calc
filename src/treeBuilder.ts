@@ -34,7 +34,11 @@ export const buildTrees = (factories: Factories, target: TargetProducts): Produc
         const factory = factories.factories[factoryIdx]
         const children: ProductionTree[] = factory.ingredients.map((ingredient) => {
             const subFactoriesIdx = filterIdx(factories.factories,(factory) => factory.products.find(p => p.id === ingredient.id) !== undefined)
-            if (subFactoriesIdx.length === 1 && factories.factories[subFactoriesIdx[0]].products.length === 1) {
+            if (
+                subFactoriesIdx.length === 1
+                && factories.factories[subFactoriesIdx[0]].products.length === 1
+                && factories.factories.filter(factory => factory.ingredients.map(i => i.id).includes(factories.factories[subFactoriesIdx[0]].products[0].id)).length === 1
+            ) {
                 return buildTree(subFactoriesIdx[0])
             } else {
                 return {

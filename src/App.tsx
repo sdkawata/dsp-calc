@@ -63,13 +63,28 @@ const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({o
 const StyledTopLevelTreesDisplay = styled.ul``
 const StyledTreesDisplay = styled.ul``
 const StyledTreeDisplay = styled.ul``
+const StyledFactoryView = styled.div`
+display: flex;
+`
+const StyledFactoryProductView = styled.div`
+`
+const StyledFactoryMachineView = styled.div`
+margin-left: 30px;
+`
 const ProductTreeDisplay: React.FC<{tree: ProductionTree}> = ({tree}) => {
     if (tree.type === "external") {
         return <StyledTreeDisplay><Icon id={tree.id}/> {tree.rate} / sec</StyledTreeDisplay>
     } else if (tree.type === "factory") {
         return <StyledTreeDisplay>
         {
-            tree.factory.products.map((product) => <div><Icon id={product.id}/> {product.rate} / sec</div>)
+            <StyledFactoryView>
+                <StyledFactoryProductView>{
+                tree.factory.products.map((product) => <div>
+                    <Icon id={product.id}/> {product.rate} / sec
+                </div>)}
+                </StyledFactoryProductView>
+                <StyledFactoryMachineView><Icon id={tree.factory.machine}/>x {tree.factory.machineCount}</StyledFactoryMachineView>
+            </StyledFactoryView>
         }
         <StyledTreesDisplay>
             {
