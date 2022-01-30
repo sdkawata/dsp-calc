@@ -47,12 +47,16 @@ const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({o
                 <span onClick={() => setShowSelect(true)}><Icon id={product}/></span>
                 {showSelect  &&
                     <StyledProductSelect>
-                        select product <span onClick={() => setShowSelect(false)}>x close</span><br/>
+                        <div style={{display: "flex",justifyContent: "space-between"}}>
+                        <span>select product</span><span style={{cursor: "pointer"}} onClick={() => setShowSelect(false)}>x close</span>
+                        </div>
                         {data.items.map(item => <span onClick={() => {
                             setProduct(item.id)
                             setShowSelect(false)
                             onChange([{id:item.id, rate: Number(rate)}])
-                        }} key={item.id}><Icon id={item.id}/></span>)}
+                        }} 
+                        style={{cursor: "pointer"}}
+                        key={item.id}><Icon id={item.id}/></span>)}
                     </StyledProductSelect>
                 }
                 </StyledProductSelectWrapper>
