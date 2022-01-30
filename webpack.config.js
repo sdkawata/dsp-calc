@@ -16,6 +16,10 @@ module.exports = {
       {
         test: /\.tsx?$/,
         use: ['ts-loader']
+      },
+      {
+        test: /\.png/,
+        type: 'asset/resource',
       }
     ]
   },

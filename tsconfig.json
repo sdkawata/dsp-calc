@@ -6,6 +6,7 @@
         "allowSyntheticDefaultImports": true,
         "moduleResolution": "node",
         "esModuleInterop": true,
-        "strictNullChecks": true
+        "strictNullChecks": true,
+        "resolveJsonModule": true
     }
   }
