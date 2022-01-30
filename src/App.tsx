@@ -67,26 +67,61 @@ border-spacing: 0;
 
 const StyledTR = styled.tr`
 `
-const StyledTD = styled.td<{indent?: number}>`
-padding-left: ${props => (props.indent ?? 0) * 50}px;
+const StyledTD = styled.td`
 border: #ccc solid 1px;
+padding-left: 3px;
+padding-right: 3px;
 `
-const ProductTreeDisplay: React.FC<{tree: ProductionTree, indent: number}> = ({tree, indent}) => {
+const StyledConnectWrapper = styled.div`
+display: flex;
+`
+const StyledVerticalLine = styled.span<{hasLine: boolean; half: boolean;lastOfLine: boolean;}>`
+width: ${props => props.lastOfLine ? "0px" : "16px"};
+border-left: ${props => props.hasLine ? "#000 1px solid" : ""};
+height: ${props => props.half ? "20px" : "auto"};
+margin-left: 16px;
+`
+const StyledConnectLine = styled.span`
+width: 16px;
+border-bottom: #000 1px solid;
+height: 20px;
+`
+
+const Indent: React.FC<{indents: boolean[]}> = ({indents}) => {
+    return <>
+        {indents.map((b, idx) => {
+            const isLast = indents.length -1 === idx;
+            return <>
+                <StyledVerticalLine hasLine={!b || isLast} lastOfLine={isLast} half={b && isLast}/>
+                {isLast && <StyledConnectLine/>}
+            </>
+        })}
+    </>
+}
+const ProductTreeDisplay: React.FC<{tree: ProductionTree, indents: boolean[]}> = ({tree, indents}) => {
     if (tree.type === "external") {
-        return <StyledTR><StyledTD indent={indent}><Icon id={tree.id}/>{tree.rate} / sec </StyledTD><StyledTD></StyledTD></StyledTR>
+        return <StyledTR><StyledTD><StyledConnectWrapper><Indent indents={indents}/><div><Icon id={tree.id}/>{tree.rate} / sec </div></StyledConnectWrapper></StyledTD><StyledTD></StyledTD></StyledTR>
     } else if (tree.type === "factory") {
         return <>
             <StyledTR>
-                <StyledTD indent={indent}>
-                {
-                tree.factory.products.map((product) => <div>
-                    <Icon id={product.id}/> {product.rate} / sec
-                </div>)}
+                <StyledTD>
+                    <StyledConnectWrapper>
+                    <Indent indents={indents}/>
+                    <div>
+                    {
+                    tree.factory.products.map((product) => <div>
+                        <Icon id={product.id}/> {product.rate} / sec
+                    </div>)}
+                    </div>
+                    </StyledConnectWrapper>
                 </StyledTD>
                 <StyledTD><Icon id={tree.factory.machine}/>x {tree.factory.machineCount}</StyledTD>
             </StyledTR>
             {
-                tree.children.map(tree => <ProductTreeDisplay tree={tree} indent={indent+1}/>)
+                tree.children.map((child, idx) => {
+                    const isLast = tree.children.length -1 === idx;
+                    return <ProductTreeDisplay tree={child} indents={[...indents,isLast]}/>
+                })
             }
     </>
     } else {
@@ -96,7 +131,7 @@ const ProductTreeDisplay: React.FC<{tree: ProductionTree, indent: number}> = ({t
 
 const ProductTreesDisplay: React.FC<{trees: ProductionTree[]}> = ({trees}) => {
     return <StyledTable><tbody>{
-        trees.map(tree => <ProductTreeDisplay tree={tree} indent={0}/>)
+        trees.map(tree => <ProductTreeDisplay tree={tree} indents={[]}/>)
     }</tbody></StyledTable>
 }
 
