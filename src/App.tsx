@@ -2,6 +2,8 @@ import React, { useState } from "react"
 import data from "../data/data.json"
 import icon from "../data/icons.png"
 import styled from "styled-components"
+import { simpleSolver } from "./simpleSolver"
+import { TargetProducts } from "./types"
 
 const StyledIcon = styled.span<{position: string}>`
 display: inline-block;
@@ -38,7 +40,7 @@ background-color: white;
 const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({onChange}) => {
     const [product, setProduct] = useState("iron-ore")
     const [showSelect, setShowSelect] = useState(false)
-    const [rate, setRate] = useState("60")
+    const [rate, setRate] = useState("1")
     return <div>
             Produce<StyledProductSelectWrapper>
                 <span onClick={() => setShowSelect(true)}><Icon id={product}/></span>
@@ -48,20 +50,19 @@ const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({o
                         {data.items.map(item => <span onClick={() => {
                             setProduct(item.id)
                             setShowSelect(false)
-                            onChange([{id:product, rate: Number(rate)}])
+                            onChange([{id:item.id, rate: Number(rate)}])
                         }}><Icon id={item.id}/></span>)}
                     </StyledProductSelect>
                 }
                 </StyledProductSelectWrapper>
-            <input type="number" value={rate} onChange={(e) => setRate(e.target.value)}/> / min
+            <input type="number" value={rate} onChange={(e) => setRate(e.target.value)}/> / sec
         </div>
 }
 
-type TargetProducts = {id: string; rate: number}[]
 
 const App: React.FC = () => {
     return <>
-        <ProductInput onChange={() => {}}/>
+        <ProductInput onChange={(target) => {console.log(simpleSolver(target, data.recipes))}}/>
     </>
 }
 
