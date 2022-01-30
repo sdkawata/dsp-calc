@@ -1,9 +1,10 @@
-import React, { useState } from "react"
+import React, { useMemo, useState } from "react"
 import data from "../data/data.json"
 import icon from "../data/icons.png"
 import styled from "styled-components"
 import { simpleSolver } from "./simpleSolver"
 import { TargetProducts } from "./types"
+import { buildTrees, ProductionTree } from "./treeBuilder"
 
 const StyledIcon = styled.span<{position: string}>`
 display: inline-block;
@@ -51,7 +52,7 @@ const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({o
                             setProduct(item.id)
                             setShowSelect(false)
                             onChange([{id:item.id, rate: Number(rate)}])
-                        }}><Icon id={item.id}/></span>)}
+                        }} key={item.id}><Icon id={item.id}/></span>)}
                     </StyledProductSelect>
                 }
                 </StyledProductSelectWrapper>
@@ -59,10 +60,41 @@ const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({o
         </div>
 }
 
+const StyledTopLevelTreesDisplay = styled.ul``
+const StyledTreesDisplay = styled.ul``
+const StyledTreeDisplay = styled.ul``
+const ProductTreeDisplay: React.FC<{tree: ProductionTree}> = ({tree}) => {
+    if (tree.type === "external") {
+        return <StyledTreeDisplay><Icon id={tree.id}/> {tree.rate} / sec</StyledTreeDisplay>
+    } else if (tree.type === "factory") {
+        return <StyledTreeDisplay>
+        {
+            tree.factory.products.map((product) => <div><Icon id={product.id}/> {product.rate} / sec</div>)
+        }
+        <StyledTreesDisplay>
+            {
+                tree.children.map(tree => <ProductTreeDisplay tree={tree}/>)
+            }
+        </StyledTreesDisplay>
+    </StyledTreeDisplay>
+    } else {
+        return <></>
+    }
+}
+
+const ProductTreesDisplay: React.FC<{trees: ProductionTree[]}> = ({trees}) => {
+    return <StyledTopLevelTreesDisplay>{
+        trees.map(tree => <ProductTreeDisplay tree={tree}/>)
+    }</StyledTopLevelTreesDisplay>
+}
 
 const App: React.FC = () => {
+    const [target, setTarget] = useState([{id: "iron-ore", rate: 1}])
+    const factories = useMemo(() => simpleSolver(target, data.recipes), [target])
+    const trees = useMemo(() => buildTrees(factories, target), [factories, target])
     return <>
-        <ProductInput onChange={(target) => {console.log(simpleSolver(target, data.recipes))}}/>
+        <ProductInput onChange={(target) => {setTarget(target)}}/>
+        <ProductTreesDisplay trees={trees}/>
     </>
 }
 
