@@ -90,10 +90,10 @@ const Indent: React.FC<{indents: boolean[]}> = ({indents}) => {
     return <>
         {indents.map((b, idx) => {
             const isLast = indents.length -1 === idx;
-            return <>
+            return <React.Fragment key={idx}>
                 <StyledVerticalLine hasLine={!b || isLast} lastOfLine={isLast} half={b && isLast}/>
                 {isLast && <StyledConnectLine/>}
-            </>
+            </React.Fragment>
         })}
     </>
 }
@@ -109,7 +109,7 @@ const ProductTreeDisplay: React.FC<{tree: ProductionTree, indents: boolean[]}> =
                     <Indent indents={indents}/>
                     <div>
                     {
-                    tree.factory.products.map((product) => <div>
+                    tree.factory.products.map((product) => <div key={product.id}>
                         <Icon id={product.id}/> {formatNumber(product.rate)} / sec
                     </div>)}
                     </div>
@@ -120,7 +120,7 @@ const ProductTreeDisplay: React.FC<{tree: ProductionTree, indents: boolean[]}> =
             {
                 tree.children.map((child, idx) => {
                     const isLast = tree.children.length -1 === idx;
-                    return <ProductTreeDisplay tree={child} indents={[...indents,isLast]}/>
+                    return <ProductTreeDisplay tree={child} indents={[...indents,isLast]} key={idx}/>
                 })
             }
     </>
@@ -131,7 +131,7 @@ const ProductTreeDisplay: React.FC<{tree: ProductionTree, indents: boolean[]}> =
 
 const ProductTreesDisplay: React.FC<{trees: ProductionTree[]}> = ({trees}) => {
     return <StyledTable><tbody>{
-        trees.map(tree => <ProductTreeDisplay tree={tree} indents={[]}/>)
+        trees.map((tree,idx) => <ProductTreeDisplay tree={tree} indents={[]} key={idx}/>)
     }</tbody></StyledTable>
 }
 
