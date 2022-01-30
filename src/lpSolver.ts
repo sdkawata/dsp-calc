@@ -67,7 +67,7 @@ export const lpSolver = (target: TargetProducts, recipes: Recipe[], items: Item[
         const speed = items.find((item) => item.id === machine)?.factory?.speed ?? 1;
         factories.push({
             machine: recipe.producers[0],
-            machineCount: results[key] / speed,
+            machineCount: results[key] / speed * recipe.time,
             products,
             ingredients,
         })

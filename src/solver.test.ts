@@ -59,17 +59,17 @@ describe("simpleSolver", () => {
                 ingredients:[]
             }]} as Factories)
     })
-    test("should use factory.speed", () => {
+    test("should consider factory.speed and time", () => {
         expect(lpSolver(
             [{id: "A", rate: 1}],
-            [{id:"A", name: "A", time: 1, producers:["A-miner"]}],
+            [{id:"A", name: "A", time: 10, producers:["A-miner"]}],
             [{id: "A-miner", factory:{speed: 0.5}}]
         ))
             .toBeSameFactories({factories:[{
                 products:[{id: "A", rate:1}],
                 machine: "A-miner",
-                machineCount: 2,
+                machineCount: 20,
                 ingredients:[]
             }]} as Factories)
-})
+        })
 })
