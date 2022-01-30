@@ -1,9 +1,10 @@
 import { lpSolver } from "./lpSolver"
 import { Factories } from "./types"
 
+
 describe("simpleSolver", () => {
     test("should solve mining", () => {
-            expect(lpSolver([{id: "A", rate: 1}], [{id:"A", name: "A", time: 1, producers:["A-miner"]}]))
+            expect(lpSolver([{id: "A", rate: 1}], [{id:"A", name: "A", time: 1, producers:["A-miner"]}], []))
                 .toBeSameFactories({factories:[{
                     products:[{id: "A", rate:1}],
                     machine: "A-miner",
@@ -15,7 +16,7 @@ describe("simpleSolver", () => {
         expect(lpSolver([{id: "A", rate: 1}], [
             {id:"A", name: "A", time: 1, producers:["A-crafter"], in:{B: 1}},
             {id:"B", name: "B", time: 1, producers:["B-miner"]},
-        ]))
+        ], []))
             .toBeSameFactories({factories:[{
                 products:[{id: "A", rate:1}],
                 machine: "A-crafter",
@@ -35,7 +36,7 @@ describe("simpleSolver", () => {
             {id:"A1", name: "A1", time: 1, producers:["A-crafter"], in:{B:1}},
             {id:"A2", name: "A2", time: 1, producers:["A-crafter"], in:{B:1}},
             {id:"B", name: "B", time: 1, producers:["B-miner"]},
-        ]))
+        ], []))
             .toBeSameFactories({factories:[{
                 products:[{id: "A", rate:1}],
                 machine: "A-crafter",
@@ -58,4 +59,17 @@ describe("simpleSolver", () => {
                 ingredients:[]
             }]} as Factories)
     })
+    test("should use factory.speed", () => {
+        expect(lpSolver(
+            [{id: "A", rate: 1}],
+            [{id:"A", name: "A", time: 1, producers:["A-miner"]}],
+            [{id: "A-miner", factory:{speed: 0.5}}]
+        ))
+            .toBeSameFactories({factories:[{
+                products:[{id: "A", rate:1}],
+                machine: "A-miner",
+                machineCount: 2,
+                ingredients:[]
+            }]} as Factories)
+})
 })

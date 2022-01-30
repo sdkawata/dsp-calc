@@ -1,5 +1,5 @@
 import solver from "javascript-lp-solver"
-import { Factories, Factory, Recipe, TargetProducts } from "./types";
+import { Factories, Factory, Item, Recipe, TargetProducts } from "./types";
 
 const objectTransform = <T,T2>(o:{[k:string]:T}, f:(t:T, k:string)=>T2): {[k:string]:T2} => {
     const result: {[k:string]:T2} = {}
@@ -9,7 +9,7 @@ const objectTransform = <T,T2>(o:{[k:string]:T}, f:(t:T, k:string)=>T2): {[k:str
     return result 
 }
 
-export const lpSolver = (target: TargetProducts, recipes: Recipe[]): Factories => {
+export const lpSolver = (target: TargetProducts, recipes: Recipe[], items: Item[]): Factories => {
     const constraintsSet: Set<string> = new Set();
     const variables: {[k:string]: {[k:string]: number}} = {}
     for (const recipe of recipes) {
@@ -63,9 +63,11 @@ export const lpSolver = (target: TargetProducts, recipes: Recipe[]): Factories =
         const products = Object.keys(out).map(k => ({id: k, rate: results[key] * (out[k] ?? 0)}))
         const inV = recipe.in ?? {}
         const ingredients = Object.keys(inV).map(k => ({id: k, rate: results[key] * (inV[k] ?? 0)}))
+        const machine = recipe.producers[0]
+        const speed = items.find((item) => item.id === machine)?.factory?.speed ?? 1;
         factories.push({
             machine: recipe.producers[0],
-            machineCount: results[key],
+            machineCount: results[key] / speed,
             products,
             ingredients,
         })
