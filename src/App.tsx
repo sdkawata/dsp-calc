@@ -2,9 +2,10 @@ import React, { useEffect, useMemo, useState } from "react"
 import data from "../data/data.json"
 import icon from "../data/icons.png"
 import styled from "styled-components"
-import { TargetProducts } from "./types"
+import { Factory, TargetProducts } from "./types"
 import { buildTrees, ProductionTree } from "./treeBuilder"
 import { lpSolver } from "./lpSolver"
+import { isJSDocReturnTag } from "typescript"
 
 const StyledIcon = styled.span<{position: string}>`
 display: inline-block;
@@ -36,6 +37,7 @@ left: 0px;
 border: 1px solid black;
 box-shadow: 1px;
 background-color: white;
+z-index: 99;
 `
 
 const Modal: React.FC<{onClose: () => void}> = ({onClose, children}) => {
@@ -77,6 +79,7 @@ const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({o
 
 const StyledTable = styled.table`
 border-spacing: 0;
+position: relative;
 `
 
 const StyledTR = styled.tr`
@@ -113,6 +116,43 @@ const Indent: React.FC<{indents: boolean[]}> = ({indents}) => {
     </>
 }
 const formatNumber = (n:number):string => n.toFixed(1).replace(/\.0$/, "")
+
+const StyledProductModalWrapper = styled.span`
+display:inline-block;
+position: relative
+`
+const StyledProductModal = styled.div`
+position: absolute;
+width: 500px;
+top: 0px;
+border: 1px solid black;
+box-shadow: 1px;
+background-color: white;
+z-index: 99;
+`
+const StyledIconBorder = styled.span<{selected: boolean}>`
+display: inline-block;
+border: ${props => props.selected ? "1px solid red" : "1px solid #ccc"};
+`
+const ProductModal: React.FC<{machines:string[], currentMachine: string}> = ({machines, currentMachine}) => {
+    return <StyledProductModal>
+            <div>machines: {machines.map((machine) => <StyledIconBorder selected={machine === currentMachine}><Icon id={machine} key={machine}/></StyledIconBorder>)}</div>
+        </StyledProductModal>
+}
+
+const ProductionIcon: React.FC<{factory: Factory}> = ({factory}) => {
+    const [showModal, setShowModal] = useState(false)
+    const recipe = data.recipes.find((recipe) => recipe.id === factory.recipe)!
+    return (
+        <>
+<StyledProductModalWrapper onClick={() => setShowModal(true)}>
+    <Icon id={factory.machine}/>
+    {showModal && <Modal onClose={() => setShowModal(false)}><ProductModal machines={recipe.producers} currentMachine={factory.machine}/></Modal>}
+</StyledProductModalWrapper>x {formatNumber(factory.machineCount)}
+</>
+    )
+}
+
 const ProductTreeDisplay: React.FC<{tree: ProductionTree, indents: boolean[]}> = ({tree, indents}) => {
     if (tree.type === "external") {
         return <StyledTR><StyledTD><StyledConnectWrapper><Indent indents={indents}/><div><Icon id={tree.id}/>{formatNumber(tree.rate)} / sec </div></StyledConnectWrapper></StyledTD><StyledTD></StyledTD></StyledTR>
@@ -130,7 +170,7 @@ const ProductTreeDisplay: React.FC<{tree: ProductionTree, indents: boolean[]}> =
                     </div>
                     </StyledConnectWrapper>
                 </StyledTD>
-                <StyledTD><Icon id={tree.factory.machine}/>x {formatNumber(tree.factory.machineCount)}</StyledTD>
+                <StyledTD><ProductionIcon factory={tree.factory}/></StyledTD>
             </StyledTR>
             {
                 tree.children.map((child, idx) => {
@@ -150,13 +190,29 @@ const ProductTreesDisplay: React.FC<{trees: ProductionTree[]}> = ({trees}) => {
     }</tbody></StyledTable>
 }
 
+const StyledError = styled.div`
+font-size: 1.5rem;
+color: red;
+`
+
 const App: React.FC = () => {
     const [target, setTarget] = useState([{id: "t-matrix", rate: 1}])
-    const factories = useMemo(() => lpSolver(target, data.recipes, data.items), [target])
+    const [error, setError] = useState<string | undefined>(undefined)
+    const factories = useMemo(() => {
+        try {
+            setError(undefined);
+            return lpSolver(target, data.recipes, data.items)
+        } catch(e) {
+            setError(e.message)
+            return {factories:[]};
+        }
+    }, [target])
     const trees = useMemo(() => buildTrees(factories, target), [factories, target])
+    console.log(error)
     return <>
         <ProductInput onChange={(target) => {setTarget(target)}}/>
-        <ProductTreesDisplay trees={trees}/>
+        {error === undefined ? 
+        <ProductTreesDisplay trees={trees}/>: <StyledError>{error}</StyledError>}
     </>
 }
 

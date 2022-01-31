@@ -9,7 +9,8 @@ describe("simpleSolver", () => {
                     products:[{id: "A", rate:1}],
                     machine: "A-miner",
                     machineCount: 1,
-                    ingredients:[]
+                    ingredients:[],
+                    recipe: "A",
                 }]} as Factories)
     })
     test("should solve crafting and mining", () => {
@@ -21,12 +22,14 @@ describe("simpleSolver", () => {
                 products:[{id: "A", rate:1}],
                 machine: "A-crafter",
                 machineCount: 1,
-                ingredients:[{id: "B", rate: 1}]
+                ingredients:[{id: "B", rate: 1}],
+                recipe: "A",
             },{
                 products:[{id: "B", rate:1}],
                 machine: "B-miner",
                 machineCount: 1,
-                ingredients:[]
+                ingredients:[],
+                recipe: "B",
             }]} as Factories)
     })
     
@@ -41,22 +44,26 @@ describe("simpleSolver", () => {
                 products:[{id: "A", rate:1}],
                 machine: "A-crafter",
                 machineCount: 1,
-                ingredients:[{id: "A1", rate: 1},{id: "A2", rate: 1}]
+                ingredients:[{id: "A1", rate: 1},{id: "A2", rate: 1}],
+                recipe: "A",
             },{
                 products:[{id: "A1", rate:1}],
                 machine: "A-crafter",
                 machineCount: 1,
-                ingredients:[{id: "B", rate: 1}]
+                ingredients:[{id: "B", rate: 1}],
+                recipe: "A1",
             },{
                 products:[{id: "A2", rate:1}],
                 machine: "A-crafter",
                 machineCount: 1,
-                ingredients:[{id: "B", rate: 1}]
+                ingredients:[{id: "B", rate: 1}],
+                recipe: "A2",
             },{
                 products:[{id: "B", rate:2}],
                 machine: "B-miner",
                 machineCount: 2,
-                ingredients:[]
+                ingredients:[],
+                recipe: "B",
             }]} as Factories)
     })
     test("should consider factory.speed and time", () => {
@@ -69,7 +76,8 @@ describe("simpleSolver", () => {
                 products:[{id: "A", rate:1}],
                 machine: "A-miner",
                 machineCount: 20,
-                ingredients:[]
+                ingredients:[],
+                recipe: "A",
             }]} as Factories)
         })
 })

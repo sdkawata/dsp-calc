@@ -70,6 +70,7 @@ export const lpSolver = (target: TargetProducts, recipes: Recipe[], items: Item[
             machineCount: results[key] / speed * recipe.time,
             products,
             ingredients,
+            recipe: recipe.id,
         })
     }
     return {factories}
