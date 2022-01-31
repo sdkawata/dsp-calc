@@ -6,6 +6,9 @@ import { Factory, TargetProducts } from "./types"
 import { buildTrees, ProductionTree } from "./treeBuilder"
 import { lpSolver } from "./lpSolver"
 import { isJSDocReturnTag } from "typescript"
+import { useSelector } from "react-redux"
+import { useAppDispatch, useAppSelector } from "./hooks"
+import { setId, setRate } from "./productInputSlice"
 
 const StyledIcon = styled.span<{position: string}>`
 display: inline-block;
@@ -49,10 +52,11 @@ const Modal: React.FC<{onClose: () => void}> = ({onClose, children}) => {
     return <>{children}</>
 }
 
-const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({onChange}) => {
-    const [product, setProduct] = useState("iron-ore")
+const ProductInput: React.FC = () => {
+    const {id: product, rate} = useAppSelector(state => state.productInput)
+    const [inputRate, setInputRate] = useState("1")
+    const dispatch = useAppDispatch()
     const [showSelect, setShowSelect] = useState(false)
-    const [rate, setRate] = useState("1")
     return <div>
             Produce<StyledProductSelectWrapper>
                 <span onClick={() => setShowSelect(true)}><Icon id={product}/></span>
@@ -63,9 +67,8 @@ const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({o
                         <span>select product</span><span style={{cursor: "pointer"}} onClick={() => setShowSelect(false)}>x close</span>
                         </div>
                         {data.items.map(item => <span onClick={() => {
-                            setProduct(item.id)
+                            dispatch(setId(item.id))
                             setShowSelect(false)
-                            onChange([{id:item.id, rate: Number(rate)}])
                         }} 
                         style={{cursor: "pointer"}}
                         key={item.id}><Icon id={item.id}/></span>)}
@@ -73,7 +76,11 @@ const ProductInput: React.FC<{onChange: (target: TargetProducts) => void}> = ({o
                     </Modal>
                 }
                 </StyledProductSelectWrapper>
-            <input type="number" value={rate} onChange={(e) => setRate(e.target.value)} onBlur={() => onChange([{id:product, rate: Number(rate)}])}/> / sec
+            <input type="number"
+            value={rate}
+            onChange={(e) => setInputRate(e.target.value)}
+            onBlur={() => dispatch(setRate(Number(inputRate)))}
+            /> / sec
         </div>
 }
 
@@ -196,21 +203,20 @@ color: red;
 `
 
 const App: React.FC = () => {
-    const [target, setTarget] = useState([{id: "t-matrix", rate: 1}])
+    const target = useAppSelector(state => state.productInput)
     const [error, setError] = useState<string | undefined>(undefined)
     const factories = useMemo(() => {
         try {
             setError(undefined);
-            return lpSolver(target, data.recipes, data.items)
+            return lpSolver([target], data.recipes, data.items)
         } catch(e) {
             setError(e.message)
             return {factories:[]};
         }
     }, [target])
-    const trees = useMemo(() => buildTrees(factories, target), [factories, target])
-    console.log(error)
+    const trees = useMemo(() => buildTrees(factories, [target]), [factories, target])
     return <>
-        <ProductInput onChange={(target) => {setTarget(target)}}/>
+        <ProductInput/>
         {error === undefined ? 
         <ProductTreesDisplay trees={trees}/>: <StyledError>{error}</StyledError>}
     </>
