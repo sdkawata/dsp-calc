@@ -58,8 +58,31 @@ export const buildTrees = (factories: Factories, target: TargetProducts): Produc
             currentTrees.push(buildTree(idx));
         }
     }
+    const relatives = Array.from(Array(factories.factories.length), (v,k) => new Set([k]))
+    let changed = true
+    while (changed) {
+        changed = false
+        for (let idx = 0; idx < factories.factories.length;idx++) {
+            for (let idx2 = 0; idx2 < factories.factories.length;idx2++) {
+                if (
+                    intersects(
+                        factories.factories[idx2].products.map(p => p.id),
+                        factories.factories[idx].ingredients.map(i => i.id)
+                    ).length > 0
+                ) {
+                    const before = relatives[idx2].size
+                    relatives[idx2] = Array.from(relatives[idx].values()).reduce((set, value) => set.add(value), relatives[idx2])
+                    if (relatives[idx2].size > before) {
+                        changed = true;
+                    }
+                }
+            }
+        }
+    }
     while (notParsed.size > 0) {
-        currentTrees.push(buildTree(Array.from(notParsed.values())[0]))
+        const canditateKey = Array.from(notParsed.values())
+        canditateKey.sort((a,b) => relatives[a].size - relatives[b].size)
+        currentTrees.push(buildTree(canditateKey[0]))
     }
     return currentTrees;
 }
