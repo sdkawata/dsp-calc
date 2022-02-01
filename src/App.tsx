@@ -1,14 +1,12 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import data from "../data/data.json"
 import icon from "../data/icons.png"
 import styled from "styled-components"
-import { Factory, TargetProducts } from "./types"
+import { Factory } from "./types"
 import { buildTrees, ProductionTree } from "./treeBuilder"
 import { lpSolver } from "./lpSolver"
-import { isJSDocReturnTag } from "typescript"
-import { useSelector } from "react-redux"
 import { useAppDispatch, useAppSelector } from "./hooks"
-import { setId, setRate } from "./productInputSlice"
+import { setId, setMachine, setRate } from "./productInputSlice"
 
 const StyledIcon = styled.span<{position: string}>`
 display: inline-block;
@@ -32,7 +30,7 @@ const Icon: React.FC<{id:string}> = ({id}) => {
 const StyledProductSelectWrapper = styled.span`
 position:relative;
 `
-const StyledProductSelect = styled.div`
+const StyledModal = styled.div`
 position: absolute;
 width: 500px;
 top: 0px;
@@ -43,13 +41,33 @@ background-color: white;
 z-index: 99;
 `
 
+const isAncestor = (elem1: HTMLElement, elem2: HTMLElement) => {
+    let current = elem1;
+    while (true) {
+        if (! current.parentElement) {
+            return false;
+        }
+        current = current.parentElement;
+        if (current === elem2) {
+            return true;
+        }
+    }
+}
+
 const Modal: React.FC<{onClose: () => void}> = ({onClose, children}) => {
+    const modalRef = useRef<HTMLDivElement | null>(null)
     useEffect(() => {
-        const listner = (e) => {e.preventDefault(); onClose()}
-        document.addEventListener('click',listner);
+        const listner = (e:MouseEvent) => {
+            e.preventDefault();
+            const target = (e.target as HTMLElement)
+            if (!modalRef.current || !isAncestor(target, modalRef.current)) {
+                onClose()
+            }
+        }
+        document.addEventListener('click', listner);
         return () => document.removeEventListener('click', listner)
     }, [onClose])
-    return <>{children}</>
+    return <StyledModal ref={modalRef}>{children}</StyledModal>
 }
 
 const ProductInput: React.FC = () => {
@@ -57,23 +75,22 @@ const ProductInput: React.FC = () => {
     const [inputRate, setInputRate] = useState("1")
     const dispatch = useAppDispatch()
     const [showSelect, setShowSelect] = useState(false)
+    const onClose = useCallback(() => setShowSelect(false), [])
     return <div>
             Produce<StyledProductSelectWrapper>
                 <span onClick={() => setShowSelect(true)}><Icon id={product}/></span>
                 {showSelect  &&
-                <Modal onClose={() => setShowSelect(false)}>
-                    <StyledProductSelect>
-                        <div style={{display: "flex",justifyContent: "space-between"}}>
-                        <span>select product</span><span style={{cursor: "pointer"}} onClick={() => setShowSelect(false)}>x close</span>
-                        </div>
-                        {data.items.map(item => <span onClick={() => {
-                            dispatch(setId(item.id))
-                            setShowSelect(false)
-                        }} 
-                        style={{cursor: "pointer"}}
-                        key={item.id}><Icon id={item.id}/></span>)}
-                    </StyledProductSelect>
-                    </Modal>
+                <Modal onClose={onClose}>
+                    <div style={{display: "flex",justifyContent: "space-between"}}>
+                    <span>select product</span><span style={{cursor: "pointer"}} onClick={() => setShowSelect(false)}>x close</span>
+                    </div>
+                    {data.items.map(item => <span onClick={() => {
+                        dispatch(setId(item.id))
+                        setShowSelect(false)
+                    }} 
+                    style={{cursor: "pointer"}}
+                    key={item.id}><Icon id={item.id}/></span>)}
+                </Modal>
                 }
                 </StyledProductSelectWrapper>
             <input type="number"
@@ -128,33 +145,35 @@ const StyledProductModalWrapper = styled.span`
 display:inline-block;
 position: relative
 `
-const StyledProductModal = styled.div`
-position: absolute;
-width: 500px;
-top: 0px;
-border: 1px solid black;
-box-shadow: 1px;
-background-color: white;
-z-index: 99;
-`
+
 const StyledIconBorder = styled.span<{selected: boolean}>`
 display: inline-block;
 border: ${props => props.selected ? "1px solid red" : "1px solid #ccc"};
 `
-const ProductModal: React.FC<{machines:string[], currentMachine: string}> = ({machines, currentMachine}) => {
-    return <StyledProductModal>
-            <div>machines: {machines.map((machine) => <StyledIconBorder selected={machine === currentMachine}><Icon id={machine} key={machine}/></StyledIconBorder>)}</div>
-        </StyledProductModal>
+const ProductModal: React.FC<{machines:string[], recipeMachine: string, onClose:({machine: string}) => void}> = ({machines, recipeMachine, onClose}) => {
+    const [selectedMachine, setSelectedMachine] = useState(recipeMachine)
+    const onCloseModal = () => {
+        onClose({machine:selectedMachine})
+    }
+    return <Modal onClose={onCloseModal}>
+            <div>machines: {machines.map((machine) => <StyledIconBorder selected={machine === selectedMachine} onClick={() => setSelectedMachine(machine)}><Icon id={machine} key={machine}/></StyledIconBorder>)}</div>
+        </Modal>
 }
 
 const ProductionIcon: React.FC<{factory: Factory}> = ({factory}) => {
     const [showModal, setShowModal] = useState(false)
+    const dispatch = useAppDispatch()
     const recipe = data.recipes.find((recipe) => recipe.id === factory.recipe)!
     return (
         <>
 <StyledProductModalWrapper onClick={() => setShowModal(true)}>
     <Icon id={factory.machine}/>
-    {showModal && <Modal onClose={() => setShowModal(false)}><ProductModal machines={recipe.producers} currentMachine={factory.machine}/></Modal>}
+    {showModal && <ProductModal machines={recipe.producers} recipeMachine={factory.machine} onClose={({machine}) => {
+        if (factory.machine !== machine) {
+            dispatch(setMachine({recipe: recipe.id, machine}))
+        }
+        setShowModal(false)
+    }}/>}
 </StyledProductModalWrapper>x {formatNumber(factory.machineCount)}
 </>
     )
@@ -203,18 +222,20 @@ color: red;
 `
 
 const App: React.FC = () => {
-    const target = useAppSelector(state => state.productInput)
+    const {id, rate, machines} = useAppSelector(state => state.productInput)
+    const target = useMemo(
+        () => ({inputs:[{id,rate}], machines}), [id, rate, machines])
     const [error, setError] = useState<string | undefined>(undefined)
     const factories = useMemo(() => {
         try {
             setError(undefined);
-            return lpSolver([target], data.recipes, data.items)
+            return lpSolver(target, data.recipes, data.items)
         } catch(e) {
             setError(e.message)
             return {factories:[]};
         }
     }, [target])
-    const trees = useMemo(() => buildTrees(factories, [target]), [factories, target])
+    const trees = useMemo(() => buildTrees(factories, [{id,rate}]), [factories, target])
     return <>
         <ProductInput/>
         {error === undefined ? 

@@ -4,7 +4,7 @@ import { Factories } from "./types"
 
 describe("simpleSolver", () => {
     test("should solve mining", () => {
-            expect(lpSolver([{id: "A", rate: 1}], [{id:"A", name: "A", time: 1, producers:["A-miner"]}], []))
+            expect(lpSolver({inputs: [{id: "A", rate: 1}], machines:{}}, [{id:"A", name: "A", time: 1, producers:["A-miner"]}], []))
                 .toBeSameFactories({factories:[{
                     products:[{id: "A", rate:1}],
                     machine: "A-miner",
@@ -14,7 +14,7 @@ describe("simpleSolver", () => {
                 }]} as Factories)
     })
     test("should solve crafting and mining", () => {
-        expect(lpSolver([{id: "A", rate: 1}], [
+        expect(lpSolver({inputs: [{id: "A", rate: 1}], machines:{}}, [
             {id:"A", name: "A", time: 1, producers:["A-crafter"], in:{B: 1}},
             {id:"B", name: "B", time: 1, producers:["B-miner"]},
         ], []))
@@ -34,7 +34,7 @@ describe("simpleSolver", () => {
     })
     
     test("should share ingredient factory", () => {
-        expect(lpSolver([{id: "A", rate: 1}], [
+        expect(lpSolver({inputs: [{id: "A", rate: 1}], machines:{}}, [
             {id:"A", name: "A", time: 1, producers:["A-crafter"], in:{A1: 1, A2:1}},
             {id:"A1", name: "A1", time: 1, producers:["A-crafter"], in:{B:1}},
             {id:"A2", name: "A2", time: 1, producers:["A-crafter"], in:{B:1}},
@@ -68,7 +68,7 @@ describe("simpleSolver", () => {
     })
     test("should consider factory.speed and time", () => {
         expect(lpSolver(
-            [{id: "A", rate: 1}],
+            {inputs: [{id: "A", rate: 1}], machines:{}},
             [{id:"A", name: "A", time: 10, producers:["A-miner"]}],
             [{id: "A-miner", factory:{speed: 0.5}}]
         ))

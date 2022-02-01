@@ -1,5 +1,5 @@
 import solver from "javascript-lp-solver"
-import { Factories, Factory, Item, Recipe, TargetProducts } from "./types";
+import { Factories, Factory, Item, Recipe } from "./types";
 
 const objectTransform = <T,T2>(o:{[k:string]:T}, f:(t:T, k:string)=>T2): {[k:string]:T2} => {
     const result: {[k:string]:T2} = {}
@@ -9,7 +9,12 @@ const objectTransform = <T,T2>(o:{[k:string]:T}, f:(t:T, k:string)=>T2): {[k:str
     return result 
 }
 
-export const lpSolver = (target: TargetProducts, recipes: Recipe[], items: Item[]): Factories => {
+export type SolverInput = {
+    inputs: {id: string, rate: number}[],
+    machines: {[recipe: string]: string},
+}
+
+export const lpSolver = (input: SolverInput, recipes: Recipe[], items: Item[]): Factories => {
     const constraintsSet: Set<string> = new Set();
     const variables: {[k:string]: {[k:string]: number}} = {}
     for (const recipe of recipes) {
@@ -34,7 +39,7 @@ export const lpSolver = (target: TargetProducts, recipes: Recipe[], items: Item[
 
     const constraints: {[k:string] : {min: number}} = {}
     for (const constraint of constraintsSet) {
-        const targetRate = target.find((t) => t.id === constraint)?.rate
+        const targetRate = input.inputs.find((t) => t.id === constraint)?.rate
         constraints[constraint] = {min: targetRate ?? 0}
     }
     constraints["cost"] = {min: 0}
@@ -63,10 +68,10 @@ export const lpSolver = (target: TargetProducts, recipes: Recipe[], items: Item[
         const products = Object.keys(out).map(k => ({id: k, rate: results[key] * (out[k] ?? 0)}))
         const inV = recipe.in ?? {}
         const ingredients = Object.keys(inV).map(k => ({id: k, rate: results[key] * (inV[k] ?? 0)}))
-        const machine = recipe.producers[0]
+        const machine = input.machines[recipe.id] ?? recipe.producers[0]
         const speed = items.find((item) => item.id === machine)?.factory?.speed ?? 1;
         factories.push({
-            machine: recipe.producers[0],
+            machine: machine,
             machineCount: results[key] / speed * recipe.time,
             products,
             ingredients,
