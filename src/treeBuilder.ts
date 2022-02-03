@@ -1,8 +1,6 @@
 import { Factories, Factory, TargetProducts } from "./types"
+import { intersects } from "./util";
 
-const intersects = <T>(array1: T[], array2: T[]): T[] => {
-    return array1.filter(value => array2.includes(value));
-}
 
 const filterIdx = <T>(array: T[], pred: (t:T) => boolean): number[] => {
     const result: number[] = []
