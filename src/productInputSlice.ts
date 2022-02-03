@@ -5,13 +5,13 @@ interface ProductInputState {
     id: string,
     rate: number,
     machines: {[recipe: string]: string},
-    enabledRecipe: string[],
+    enabledRecipes: string[],
 }
 const initialState: ProductInputState = {
     id: 't-matrix',
     rate: 1,
     machines: {},
-    enabledRecipe: data.recipes.map(r => r.id),
+    enabledRecipes: data.recipes.map(r => r.id),
 }
 
 export const productInputSlice = createSlice({
@@ -28,14 +28,14 @@ export const productInputSlice = createSlice({
             state.machines[action.payload.recipe] = action.payload.machine;
         },
         enableRecipes: (state, action: PayloadAction<string[]>) => {
-            action.payload.forEach((recipe) => {if(state.enabledRecipe.includes(recipe)){state.enabledRecipe.push(recipe)}})
+            action.payload.forEach((recipe) => {if(state.enabledRecipes.includes(recipe)){state.enabledRecipes.push(recipe)}})
         },
         disableRecipes: (state, action: PayloadAction<string[]>) => {
-            state.enabledRecipe = state.enabledRecipe.filter((recipe) => !action.payload.includes(recipe))
+            state.enabledRecipes = state.enabledRecipes.filter((recipe) => !action.payload.includes(recipe))
         }
     }
 })
 
-export const {setId, setRate, setMachine} = productInputSlice.actions
+export const {setId, setRate, setMachine, enableRecipes, disableRecipes} = productInputSlice.actions
 
 export default productInputSlice.reducer

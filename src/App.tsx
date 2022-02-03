@@ -6,7 +6,7 @@ import { Factory } from "./types"
 import { buildTrees, ProductionTree } from "./treeBuilder"
 import { lpSolver } from "./lpSolver"
 import { useAppDispatch, useAppSelector } from "./hooks"
-import { setId, setMachine, setRate } from "./productInputSlice"
+import { disableRecipes, enableRecipes, setId, setMachine, setRate } from "./productInputSlice"
 import { intersects } from "./util"
 
 const StyledIcon = styled.span<{position: string}>`
@@ -35,9 +35,9 @@ const Recipe: React.FC<{id:string}> = ({id}) => {
     const ingredients = recipe.in ?? {}
     return <>
         <Icon id={recipe.id}/>
-        {Object.keys(ingredients).map(ingredient => <><Icon id={ingredient} key={ingredient}/> x {ingredients[ingredient]}</>)}
+        {Object.keys(ingredients).map(ingredient => <React.Fragment key={ingredient}><Icon id={ingredient}/> x {ingredients[ingredient]}</React.Fragment>)}
         {"->"}
-        {Object.keys(out).map(outId => <><Icon id={outId} key={outId}/> x {out[outId]}</>)}
+        {Object.keys(out).map(outId => <React.Fragment key={outId}><Icon id={outId}/> x {out[outId]}</React.Fragment>)}
         </>
 }
 
@@ -72,9 +72,9 @@ const Modal: React.FC<{onClose: () => void}> = ({onClose, children}) => {
     const modalRef = useRef<HTMLDivElement | null>(null)
     useEffect(() => {
         const listner = (e:MouseEvent) => {
-            e.preventDefault();
             const target = (e.target as HTMLElement)
             if (!modalRef.current || !isAncestor(target, modalRef.current)) {
+                e.preventDefault()
                 onClose()
             }
         }
@@ -164,14 +164,12 @@ const StyledIconBorder = styled.span<{selected: boolean}>`
 display: inline-block;
 border: ${props => props.selected ? "1px solid red" : "1px solid #ccc"};
 `
-const ProductModal: React.FC<{machines:string[], recipeMachine: string, relevantRecipes: (typeof data)['recipes'], enabledRecipes: string[], onClose:({machine: string}) => void}> = ({machines, recipeMachine, onClose, relevantRecipes, enabledRecipes}) => {
+const ProductModal: React.FC<{machines:string[], recipeMachine: string, relevantRecipes: (typeof data)['recipes'], enabledRecipes: string[], onClose:(v: {machine: string, enabledRecipes:string[]}) => void}> = ({machines, recipeMachine, onClose, relevantRecipes, enabledRecipes}) => {
     const [selectedMachine, setSelectedMachine] = useState(recipeMachine)
     const [currentEnabledRecipes, setCurrentEnabledRecipes] = useState(enabledRecipes)
     const onCloseModal = () => {
-        onClose({machine:selectedMachine})
+        onClose({machine:selectedMachine, enabledRecipes:currentEnabledRecipes})
     }
-    console.log(currentEnabledRecipes)
-    console.log(relevantRecipes.map(r => currentEnabledRecipes.includes(r.id)))
     return <Modal onClose={onCloseModal}>
             <table><tbody><tr><td>machines: </td>
             <td>{machines.map((machine) => <StyledIconBorder key={machine} selected={machine === selectedMachine} onClick={() => setSelectedMachine(machine)}><Icon id={machine} key={machine}/></StyledIconBorder>)}
@@ -194,15 +192,18 @@ const ProductionIcon: React.FC<{factory: Factory}> = ({factory}) => {
     const relevantRecipes = data.recipes.filter(
         (filteredRecipe) => intersects(recipe.out ? Object.keys(recipe.out) : [recipe.id], filteredRecipe.out ? Object.keys(filteredRecipe.out) : [filteredRecipe.id]).length > 0
         )
-    const enabledRecipes = useAppSelector(state => state.productInput.enabledRecipe).filter(recipe => relevantRecipes.map(r => r.id).includes(recipe))
+    const enabledRecipes = useAppSelector(state => state.productInput.enabledRecipes).filter(recipe => relevantRecipes.map(r => r.id).includes(recipe))
     return (
         <>
 <StyledProductModalWrapper onClick={() => setShowModal(true)}>
     <Icon id={factory.machine}/>
-    {showModal && <ProductModal machines={recipe.producers} recipeMachine={factory.machine} relevantRecipes={relevantRecipes} enabledRecipes={enabledRecipes} onClose={({machine}) => {
+    {showModal && <ProductModal machines={recipe.producers} recipeMachine={factory.machine} relevantRecipes={relevantRecipes} enabledRecipes={enabledRecipes}
+    onClose={({machine, enabledRecipes}) => {
         if (factory.machine !== machine) {
             dispatch(setMachine({recipe: recipe.id, machine}))
         }
+        dispatch(enableRecipes(enabledRecipes))
+        dispatch(disableRecipes(relevantRecipes.map(r => r.id).filter(r => !enabledRecipes.includes(r))))
         setShowModal(false)
     }}/>}
 </StyledProductModalWrapper>x {formatNumber(factory.machineCount)}
@@ -253,9 +254,9 @@ color: red;
 `
 
 const App: React.FC = () => {
-    const {id, rate, machines} = useAppSelector(state => state.productInput)
+    const {id, rate, machines, enabledRecipes} = useAppSelector(state => state.productInput)
     const target = useMemo(
-        () => ({inputs:[{id,rate}], machines}), [id, rate, machines])
+        () => ({inputs:[{id,rate}], machines, enabledRecipes}), [id, rate, machines, enabledRecipes])
     const [error, setError] = useState<string | undefined>(undefined)
     const factories = useMemo(() => {
         try {

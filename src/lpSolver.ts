@@ -12,12 +12,16 @@ const objectTransform = <T,T2>(o:{[k:string]:T}, f:(t:T, k:string)=>T2): {[k:str
 export type SolverInput = {
     inputs: {id: string, rate: number}[],
     machines: {[recipe: string]: string},
+    enabledRecipes: string[];
 }
 
 export const lpSolver = (input: SolverInput, recipes: Recipe[], items: Item[]): Factories => {
     const constraintsSet: Set<string> = new Set();
     const variables: {[k:string]: {[k:string]: number}} = {}
     for (const recipe of recipes) {
+        if (! input.enabledRecipes.includes(recipe.id)) {
+            continue;
+        }
         const variable = "recipe_" + recipe.id
         const v = {}
         if (recipe.out) {
