@@ -28,7 +28,7 @@ export const productInputSlice = createSlice({
             state.machines[action.payload.recipe] = action.payload.machine;
         },
         enableRecipes: (state, action: PayloadAction<string[]>) => {
-            action.payload.forEach((recipe) => {if(state.enabledRecipes.includes(recipe)){state.enabledRecipes.push(recipe)}})
+            action.payload.forEach((recipe) => {if(! state.enabledRecipes.includes(recipe)){state.enabledRecipes.push(recipe)}})
         },
         disableRecipes: (state, action: PayloadAction<string[]>) => {
             state.enabledRecipes = state.enabledRecipes.filter((recipe) => !action.payload.includes(recipe))
